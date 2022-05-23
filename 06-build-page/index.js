@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const { pipeline } = require('stream');
 const fsPromises = require('fs').promises;
 const readline = require('readline');
 
@@ -20,14 +19,8 @@ fs.mkdir(path.join(__dirname, 'project-dist'), { recursive: true }, (error) => {
 fs.readdir(dirStyles, { withFileTypes: true }, (error, files) => {
   if (error) throw error;
   files.forEach(file => {
-    const input = fs.createReadStream(path.join(dirStyles, file.name));
-    pipeline(
-      input,
-      output,
-      error => {
-        if (error) throw error;
-      }
-    );
+    const inputCss = fs.createReadStream(path.join(dirStyles, file.name));
+    inputCss.pipe(output);
   });
 });
 
@@ -38,34 +31,12 @@ const rl = readline.createInterface({
 
 // if line contains '{{???}}' then add code from '???.html' to 'index.html'
 //else add lite to 'index.html'
-rl.on('line', (line) => {
-  if(line.trim() === '{{header}}') {
-    const inputHtml2 = fs.createReadStream(path.join(dirComp, 'header.html'));
-    pipeline(
-      inputHtml2,
-      outputHtml,
-      error => {
-        if (error) throw error;
-      }
-    );
-  } else if(line.trim() === '{{articles}}') {
-    const inputHtml2 = fs.createReadStream(path.join(dirComp, 'articles.html'));
-    pipeline(
-      inputHtml2,
-      outputHtml,
-      error => {
-        if (error) throw error;
-      }
-    );
-  } else if(line.trim() === '{{footer}}') {
-    const inputHtml2 = fs.createReadStream(path.join(dirComp, 'footer.html'));
-    pipeline(
-      inputHtml2,
-      outputHtml,
-      error => {
-        if (error) throw error;
-      }
-    );
+rl.on('line', (line, error) => {
+  if (error) throw error;
+  if(line.trim().slice(0,2) === '{{') {
+    const fileName = line.trim().replace(/[{}]/g, '');
+    const inputHtml2 = fs.createReadStream(path.join(dirComp, `${fileName}.html`));
+    inputHtml2.pipe(outputHtml);
   }
   else { outputHtml.write(line + '\n'); }
 });
@@ -73,7 +44,7 @@ rl.on('line', (line) => {
 // add 'assets' folder to 'project-dist' folder
 fsPromises.mkdir(dirCopy, { recursive: true });
 
-// copy files to 'project-dist/assets'
+// copy 'assets' files to 'project-dist/assets'
 fs.readdir(dirAssets, { withFileTypes: true }, (error, files) => {
   if (error) throw error;
   files.forEach(file => {
