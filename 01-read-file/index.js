@@ -6,4 +6,4 @@ const readableStream = fs.createReadStream(dir);
 let data = '';
 
 readableStream.on('data', chunk => data += chunk);
-readableStream.on('end', () => console.log('End', data));
+readableStream.on('end', () => console.log(data));

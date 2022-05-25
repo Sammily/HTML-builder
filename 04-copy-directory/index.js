@@ -5,6 +5,16 @@ const dir = path.join(__dirname, 'files');
 const dirCopy = path.join(__dirname, 'files-copy');
 
 fsPromises.mkdir(dirCopy, { recursive: true });
+
+fs.readdir(dirCopy, (error, files) => {
+  if (error) throw error;
+  files.forEach(file => {
+    fs.unlink(path.join(dirCopy, file), error => {
+      if(error) throw error;
+    }); 
+  });
+});
+
 fs.readdir(dir, (error, files) => {
   if (error) throw error;
   files.forEach(file => {

@@ -44,6 +44,25 @@ rl.on('line', (line, error) => {
 // add 'assets' folder to 'project-dist' folder
 fsPromises.mkdir(dirCopy, { recursive: true });
 
+// delete files from 'project-dist/assets'
+fs.readdir(dirCopy, { withFileTypes: true }, (error, files) => {
+  if (error) throw error;
+  files.forEach(file => {
+    if(file.isDirectory()) {
+      fsPromises.mkdir( path.join(dirCopy, file.name), { recursive: true });
+      const folder = file.name;
+      fs.readdir(path.join(dirCopy, file.name), (error, files) => {
+        if (error) throw error;
+        files.forEach(file => {
+          fs.unlink(path.join(dirCopy, folder, file), error => {
+            if(error) throw error;
+          });
+        });
+      });
+    }
+  });
+});
+
 // copy 'assets' files to 'project-dist/assets'
 fs.readdir(dirAssets, { withFileTypes: true }, (error, files) => {
   if (error) throw error;
